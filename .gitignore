@@ -1,0 +1,25 @@
+# 大体积 / 不入库的成品
+*.iso
+*.tar.gz
+*.tgz
+
+# 苹果专有素材（构建时按 fetch_assets.sh 拉取，勿再分发）
+assets-macos/fonts/
+assets-macos/wallpapers/
+assets-macos/icons/
+*.otf
+*.ttf
+
+# 安卓构建中间产物
+macos-apk/build/
+*.keystore
+*.idsig
+*.class
+*.dex
+
+# 杂项
+preview.png
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
