@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>macOS 风格 Linux 桌面 · 单文件版</title>
+<style>
+/* ============================================================
+   macOS-style Linux Desktop — 样式
+   设计目标：尽可能贴近 macOS 视觉；光标处更亮（聚光灯）。
+   ============================================================ */
+
+:root {
+  /* 主题色（由 JS 切换 data-accent 覆写） */
+  --accent: #007AFF;
+  --accent-strong: #0A84FF;
+
+  --mb-h: 26px;            /* 菜单栏高度 */
+  --win-radius: 12px;
+
+  --text: #1d1d1f;
+  --text-soft: #515154;
+  --glass: rgba(255,255,255,0.72);
+  --glass-strong: rgba(255,255,255,0.82);
+  --glass-border: rgba(255,255,255,0.55);
+  --win-bg: rgba(246,246,248,0.92);
+  --win-side: rgba(238,238,242,0.9);
+  --shadow: 0 22px 70px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.18);
+  --hair: rgba(0,0,0,0.10);
+
+  --dock-size: 58px;
+}
+
+/* 暗色主题 */
+body.theme-dark {
+  --text: #f2f2f7;
+  --text-soft: #c7c7cc;
+  --glass: rgba(40,40,46,0.62);
+  --glass-strong: rgba(40,40,46,0.72);
+  --glass-border: rgba(255,255,255,0.12);
+  --win-bg: rgba(45,45,52,0.82);
+  --win-side: rgba(38,38,44,0.9);
+  --shadow: 0 24px 80px rgba(0,0,0,0.6), 0 2px 10px rgba(0,0,0,0.4);
+  --hair: rgba(255,255,255,0.10);
+}
+
+/* 主题色变体 */
+body[data-accent="blue"]   { --accent:#007AFF; --accent-strong:#0A84FF; }
+body[data-accent="purple"] { --accent:#9B59FF; --accent-strong:#BF5AF2; }
+body[data-accent="pink"]   { --accent:#FF2D92; --accent-strong:#FF375F; }
+body[data-accent="red"]    { --accent:#FF3B30; --accent-strong:#FF453A; }
+body[data-accent="orange"] { --accent:#FF9400; --accent-strong:#FF9F0A; }
+body[data-accent="green"]  { --accent:#28CD41; --accent-strong:#32D74B; }
+body[data-accent="graphite"]{ --accent:#8E8E93; --accent-strong:#8E8E93; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #0a0820;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+.hidden { display: none !important; }
+
+/* ===================== 开机 ===================== */
+.boot {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 40px; color: #fff;
+  transition: opacity .6s ease;
+}
+.boot-logo { opacity: .95; animation: bootPulse 2.4s ease-in-out infinite; }
+@keyframes bootPulse { 0%,100%{opacity:.55} 50%{opacity:1} }
+.boot-bar { width: 220px; height: 6px; border-radius: 4px; background: rgba(255,255,255,.18); overflow: hidden; }
+.boot-bar span { display:block; height:100%; width:0; background: rgba(255,255,255,.92); border-radius:4px;
+  transition: width 2.2s cubic-bezier(.2,.7,.2,1); }
+.boot.done .boot-bar span { width: 100%; }
+.boot.fade { opacity: 0; }
+
+/* ===================== 登录 ===================== */
+.login {
+  position: fixed; inset: 0; z-index: 9000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  background:
+    radial-gradient(120% 90% at 70% 10%, #3a1c71 0%, #2b1055 40%, #0d0a2b 100%);
+  color: #fff;
+}
+.login-avatar { filter: drop-shadow(0 8px 20px rgba(0,0,0,.4)); }
+.login-name { font-size: 22px; font-weight: 600; letter-spacing: .3px; }
+.login-hint { font-size: 12px; opacity: .6; margin-bottom: 6px; }
+.login-form { display: flex; gap: 8px; align-items: center; }
+.login-input {
+  width: 220px; padding: 9px 14px; border-radius: 9px; border: 1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.14); color: #fff; font-size: 14px; outline: none;
+  backdrop-filter: blur(8px);
+}
+.login-input::placeholder { color: rgba(255,255,255,.55); }
+.login-go {
+  width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(255,255,255,.9); color: #222; font-size: 18px; font-weight: 700;
+  transition: transform .15s, background .15s;
+}
+.login-go:hover { transform: scale(1.06); background: #fff; }
+.login-bottom {
+  position: absolute; bottom: 26px; width: 100%; display: flex; justify-content: space-between;
+  padding: 0 30px; font-size: 13px; opacity: .85;
+}
+.login-dots { display: flex; gap: 8px; }
+.login-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.55); }
+.login-dots i:first-child { background: var(--accent-strong); }
+
+/* ===================== 桌面 ===================== */
+.desktop {
+  position: fixed; inset: 0; z-index: 1;
+  background: #1a1a2e;
+  overflow: hidden;
+}
+/* 壁纸（默认 Big Sur 风格渐变） */
+.desktop::before {
+  content: ""; position: absolute; inset: 0; z-index: -2;
+  background:
+    radial-gradient(110% 80% at 18% 12%, #ffd16b 0%, rgba(255,209,107,0) 45%),
+    radial-gradient(90% 75% at 82% 18%, #ff7eb3 0%, rgba(255,126,179,0) 50%),
+    radial-gradient(120% 100% at 75% 88%, #6a5cff 0%, rgba(106,92,255,0) 55%),
+    radial-gradient(120% 110% at 20% 90%, #16c2c2 0%, rgba(22,194,194,0) 55%),
+    linear-gradient(160deg, #2b1055 0%, #0d0a2b 60%, #04030f 100%);
+  filter: saturate(1.05);
+  transition: background .8s ease;
+}
+/* 壁纸变体 */
+.desktop.wp-sonoma::before {
+  background:
+    radial-gradient(80% 70% at 30% 20%, #ff9a6c 0%, rgba(255,154,108,0) 50%),
+    radial-gradient(90% 80% at 78% 30%, #b86bff 0%, rgba(184,107,255,0) 55%),
+    radial-gradient(120% 100% at 50% 100%, #1f6bff 0%, rgba(31,107,255,0) 60%),
+    linear-gradient(180deg, #150b3a 0%, #060718 100%);
+}
+.desktop.wp-ventura::before {
+  background:
+    radial-gradient(90% 80% at 25% 15%, #ffd98a 0%, rgba(255,217,138,0) 50%),
+    radial-gradient(100% 90% at 80% 25%, #ff6f91 0%, rgba(255,111,145,0) 55%),
+    radial-gradient(130% 110% at 60% 100%, #2bb3ff 0%, rgba(43,179,255,0) 60%),
+    linear-gradient(180deg, #241a4d 0%, #0a0820 100%);
+}
+.desktop.wp-mono::before {
+  background: linear-gradient(180deg, #2c2c2e 0%, #1c1c1e 100%);
+}
+.desktop.wp-graphite::before {
+  background:
+    radial-gradient(100% 90% at 50% 0%, #4b4b52 0%, rgba(75,75,82,0) 60%),
+    linear-gradient(180deg, #2a2a2e 0%, #101012 100%);
+}
+
+/* 跟随光标的聚光灯：让光标所在位置更亮 */
+.cursor-glow {
+  position: fixed; inset: 0; z-index: 9990; pointer-events: none;
+  background: radial-gradient(220px circle at var(--mx,50%) var(--my,50%),
+              rgba(255,255,255,0.16), rgba(255,255,255,0.05) 35%, transparent 60%);
+  mix-blend-mode: screen;
+  transition: background .05s linear;
+}
+body.theme-dark .cursor-glow {
+  background: radial-gradient(240px circle at var(--mx,50%) var(--my,50%),
+              rgba(180,210,255,0.18), rgba(180,210,255,0.05) 35%, transparent 60%);
+}
+
+/* ===================== 菜单栏 ===================== */
+.menubar {
+  position: absolute; top: 0; left: 0; right: 0; height: var(--mb-h); z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 12px; font-size: 13px; color: #fff;
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(22px) saturate(1.6);
+  -webkit-backdrop-filter: blur(22px) saturate(1.6);
+  border-bottom: 0.5px solid rgba(255,255,255,0.12);
+}
+body.theme-light .menubar { color: #1d1d1f; background: rgba(255,255,255,0.55); }
+.mb-left, .mb-right { display: flex; align-items: center; gap: 2px; height: 100%; }
+.mb-apple { background: none; border: none; color: inherit; cursor: pointer; display:flex; align-items:center; padding: 0 8px; height:100%; }
+.mb-apple:hover { background: rgba(255,255,255,.18); border-radius: 5px; }
+.mb-app { font-weight: 600; padding: 0 10px 0 6px; }
+.mb-item { padding: 3px 9px; border-radius: 5px; cursor: default; opacity: .96; }
+.mb-item:hover { background: var(--accent); color: #fff; opacity: 1; }
+.mb-right { gap: 12px; }
+.mb-status { display: flex; align-items: center; opacity: .92; cursor: default; }
+.mb-date { font-weight: 500; }
+.mb-clock { font-weight: 600; font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
+
+/* ===================== 桌面图标 ===================== */
+.desktop-icons {
+  position: absolute; top: calc(var(--mb-h) + 14px); right: 18px; z-index: 10;
+  display: flex; flex-direction: column; gap: 18px; align-items: center;
+}
+.dicon { width: 76px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: default; }
+.dicon .glyph {
+  width: 56px; height: 56px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 14px rgba(0,0,0,.22);
+}
+.dicon .glyph svg { width: 34px; height: 34px; }
+.dicon .label {
+  font-size: 12px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); padding: 1px 6px; border-radius: 5px;
+  max-width: 90px; text-align: center; line-height: 1.2;
+}
+.dicon:hover .label { background: rgba(0,0,0,.28); }
+
+/* ===================== 窗口 ===================== */
+.windows { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+.win {
+  position: absolute; min-width: 320px; min-height: 200px;
+  background: var(--win-bg);
+  border-radius: var(--win-radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(30px) saturate(1.5);
+  -webkit-backdrop-filter: blur(30px) saturate(1.5);
+  border: 0.5px solid var(--glass-border);
+  display: flex; flex-direction: column; overflow: hidden;
+  pointer-events: auto;
+  transition: box-shadow .2s ease, filter .25s ease, transform .12s ease, opacity .18s ease;
+  will-change: transform;
+}
+.win.inactive { filter: brightness(0.86) saturate(0.92); }
+.win.inactive .titlebar { opacity: .65; }
+.win.focus-anim { animation: winPop .18s ease; }
+@keyframes winPop { from { transform: scale(.97); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+.win.closing { transform: scale(.9); opacity: 0; }
+.win.minimizing { transform: scale(.15) translateY(60vh); opacity: 0; }
+
+.titlebar {
+  height: 38px; flex: 0 0 38px; display: flex; align-items: center; padding: 0 14px 0 16px;
+  background: var(--glass-strong);
+  border-bottom: 0.5px solid var(--hair);
+  position: relative; cursor: default;
+}
+.traffic { display: flex; gap: 8px; align-items: center; }
+.light {
+  width: 12px; height: 12px; border-radius: 50%; position: relative; cursor: pointer;
+  border: 0.5px solid rgba(0,0,0,.12);
+  display: flex; align-items: center; justify-content: center;
+}
+.light.close  { background: #ff5f57; }
+.light.min    { background: #febc2e; }
+.light.max    { background: #28c840; }
+.light svg { width: 8px; height: 8px; opacity: 0; transition: opacity .12s; }
+.light:hover svg { opacity: 1; }
+.win.inactive .light svg { opacity: 0 !important; }
+.light.close svg path { stroke: #5a1300; }
+.light.min svg path, .light.max svg path { stroke: #6a4c00; }
+
+.win-title {
+  position: absolute; left: 0; right: 0; text-align: center; pointer-events: none;
+  font-size: 13px; font-weight: 600; color: var(--text); opacity: .9;
+}
+.win-body { flex: 1 1 auto; overflow: auto; position: relative; background: var(--win-bg); }
+.win-resize {
+  position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; z-index: 5;
+}
+
+/* ===================== Finder ===================== */
+.finder { display: flex; height: 100%; }
+.finder-side {
+  width: 180px; flex: 0 0 180px; background: var(--win-side); padding: 14px 10px; border-right: 0.5px solid var(--hair);
+  font-size: 12.5px; color: var(--text-soft);
+}
+.finder-side h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; opacity: .5; margin: 12px 8px 6px; font-weight: 700; }
+.finder-side .row { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 6px; cursor: default; }
+.finder-side .row:hover { background: rgba(127,127,127,.18); }
+.finder-side .row.active { background: var(--accent); color: #fff; }
+.finder-main { flex: 1; padding: 8px 14px; }
+.finder-toolbar { display:flex; align-items:center; gap:10px; padding: 4px 6px 12px; font-size: 12px; color: var(--text-soft); }
+.finder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px,1fr)); gap: 10px; }
+.fitem { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 4px; border-radius: 8px; cursor: default; }
+.fitem:hover { background: rgba(127,127,127,.16); }
+.fitem .ic { font-size: 34px; }
+.fitem .nm { font-size: 11.5px; color: var(--text); text-align: center; word-break: break-all; }
+
+/* ===================== Terminal ===================== */
+.term {
+  height: 100%; background: rgba(20,20,24,0.92); color: #e6e6e6;
+  font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; font-size: 13px;
+  padding: 12px 14px; overflow: auto; line-height: 1.5;
+}
+.term .line { white-space: pre-wrap; word-break: break-word; }
+.term .prompt { color: #4ec9b0; }
+.term .path { color: #569cd6; }
+.term .ok { color: #6a9955; }
+.term-input { display: flex; gap: 6px; }
+.term-input input {
+  flex: 1; background: transparent; border: none; outline: none; color: #e6e6e6;
+  font-family: inherit; font-size: 13px;
+}
+.term .ascii { color: #ff7eb3; line-height: 1.15; }
+
+/* ===================== Settings ===================== */
+.settings { display: flex; height: 100%; }
+.settings-side { width: 200px; flex:0 0 200px; background: var(--win-side); padding: 10px; border-right: .5px solid var(--hair); }
+.settings-side .srow { display:flex; align-items:center; gap:10px; padding: 8px 10px; border-radius: 7px; cursor: default; font-size: 13px; color: var(--text); }
+.settings-side .srow:hover { background: rgba(127,127,127,.16); }
+.settings-side .srow.active { background: var(--accent); color:#fff; }
+.settings-side .srow .si { font-size: 16px; }
+.settings-main { flex:1; padding: 22px 26px; overflow:auto; }
+.settings-main h2 { font-size: 20px; margin-bottom: 18px; color: var(--text); }
+.seg { display: inline-flex; background: rgba(127,127,127,.18); border-radius: 9px; padding: 3px; gap: 3px; }
+.seg button { border:none; background: transparent; padding: 7px 18px; border-radius: 7px; font-size: 13px; cursor: pointer; color: var(--text); }
+.seg button.on { background: var(--win-bg); box-shadow: 0 1px 3px rgba(0,0,0,.15); font-weight: 600; }
+.swatches { display: flex; gap: 12px; margin-top: 8px; }
+.swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+.swatch.sel { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+.wp-thumbs { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.wp-thumb { width: 96px; height: 60px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; overflow: hidden;
+  background-size: cover; }
+.wp-thumb.wp-bigsur   { background: linear-gradient(160deg,#2b1055,#0d0a2b); }
+.wp-thumb.wp-sonoma   { background: linear-gradient(180deg,#150b3a,#060718); }
+.wp-thumb.wp-ventura  { background: linear-gradient(180deg,#241a4d,#0a0820); }
+.wp-thumb.wp-mono     { background: linear-gradient(180deg,#2c2c2e,#1c1c1e); }
+.wp-thumb.wp-graphite { background: linear-gradient(180deg,#2a2a2e,#101012); }
+.wp-thumb.sel { border-color: var(--accent); }
+.field { margin: 14px 0; }
+.field label { display:block; font-size: 12px; opacity:.6; margin-bottom: 6px; }
+
+/* ===================== Calculator ===================== */
+.calc { width: 260px; background: rgba(30,30,34,.96); padding: 14px; }
+.calc-display { color:#fff; font-size: 44px; text-align: right; padding: 10px 6px 18px; min-height: 70px; font-variant-numeric: tabular-nums; overflow:hidden; }
+.calc-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+.calc-grid button {
+  border: none; border-radius: 50%; height: 52px; font-size: 20px; cursor: pointer; color:#fff;
+  background: #4c4c4e; transition: filter .12s;
+}
+.calc-grid button:hover { filter: brightness(1.2); }
+.calc-grid button.op { background: var(--accent); }
+.calc-grid button.fn { background: #6e6e70; color:#000; font-weight:600; }
+.calc-grid button.zero { grid-column: span 2; border-radius: 26px; text-align:left; padding-left: 22px; }
+
+/* ===================== Notes ===================== */
+.notes { height: 100%; display: flex; }
+.notes-side { width: 200px; background: var(--win-side); border-right: .5px solid var(--hair); padding: 10px; }
+.notes-side .nrow { padding: 8px 10px; border-radius: 7px; cursor: default; font-size: 13px; color: var(--text); }
+.notes-side .nrow:hover { background: rgba(127,127,127,.16); }
+.notes-side .nrow.active { background: var(--accent); color:#fff; }
+.notes-main { flex:1; padding: 18px 22px; }
+.notes-main textarea {
+  width: 100%; height: 100%; border: none; outline: none; resize: none; background: transparent;
+  font-size: 15px; line-height: 1.6; color: var(--text);
+}
+
+/* ===================== Browser ===================== */
+.browser { height: 100%; display: flex; flex-direction: column; }
+.browser-bar { display:flex; gap:8px; align-items:center; padding: 8px 12px; background: var(--glass-strong); border-bottom:.5px solid var(--hair); }
+.browser-bar input {
+  flex:1; border:none; background: rgba(127,127,127,.16); border-radius: 8px; padding: 6px 14px;
+  font-size: 13px; outline:none; color: var(--text); text-align:center;
+}
+.browser-page { flex:1; padding: 30px; overflow:auto; color: var(--text); font-size: 14px; line-height:1.7; }
+.browser-page h1 { font-size: 26px; margin-bottom: 10px; }
+.browser-page a { color: var(--accent); }
+
+/* ===================== About ===================== */
+.about { padding: 26px 20px; text-align: center; color: var(--text); }
+.about .logo { font-size: 64px; }
+.about h1 { font-size: 22px; margin: 8px 0 2px; }
+.about .ver { opacity:.6; font-size: 13px; margin-bottom: 18px; }
+.about table { margin: 0 auto; font-size: 13px; text-align: left; }
+.about td { padding: 4px 12px; }
+.about td:first-child { opacity:.55; text-align:right; }
+
+/* ===================== Dock ===================== */
+.dock-wrap {
+  position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); z-index: 40;
+}
+.dock {
+  display: flex; align-items: flex-end; gap: 8px; padding: 8px 10px;
+  height: calc(var(--dock-size) + 18px);
+  background: rgba(255,255,255,0.28);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border: 0.5px solid rgba(255,255,255,0.35);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+}
+body.theme-light .dock { background: rgba(255,255,255,0.45); }
+.dock-app {
+  width: var(--dock-size); height: var(--dock-size);
+  border-radius: 14px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative;
+  transform-origin: bottom center;
+  transform: scale(var(--scale, 1));
+  transition: transform .12s cubic-bezier(.2,.8,.2,1);
+  box-shadow: 0 4px 10px rgba(0,0,0,.25);
+}
+.dock-app svg { width: 58%; height: 58%; }
+.dock-app:hover { transform: scale(calc(var(--scale,1) * 1.04)); }
+.dock-app .dot {
+  position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%; background: rgba(0,0,0,.55);
+}
+body.theme-light .dock-app .dot { background: rgba(0,0,0,.5); }
+.dock-sep { width: 1px; height: 60%; align-self: center; background: rgba(127,127,127,.4); margin: 0 4px; }
+
+/* ===================== Launchpad ===================== */
+.launchpad {
+  position: absolute; inset: 0; z-index: 70;
+  background: rgba(10,10,20,0.55);
+  backdrop-filter: blur(30px) saturate(1.4);
+  -webkit-backdrop-filter: blur(30px) saturate(1.4);
+  display: flex; flex-direction: column; align-items: center; padding-top: 6vh;
+  animation: lpIn .25s ease;
+}
+@keyframes lpIn { from { opacity: 0; } to { opacity: 1; } }
+.lp-search input {
+  width: 320px; padding: 8px 16px; border-radius: 9px; border: none; outline: none;
+  background: rgba(255,255,255,.22); color: #fff; font-size: 14px; text-align: center;
+}
+.lp-search input::placeholder { color: rgba(255,255,255,.6); }
+.lp-grid {
+  display: grid; grid-template-columns: repeat(6, 120px); gap: 26px 30px; margin-top: 8vh;
+}
+.lp-app { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+.lp-app .ic { width: 60px; height: 60px; border-radius: 14px; display:flex; align-items:center; justify-content:center; box-shadow: 0 6px 16px rgba(0,0,0,.3); }
+.lp-app .ic svg { width: 60%; height: 60%; }
+.lp-app .nm { color: #fff; font-size: 12px; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+
+/* ===================== Spotlight ===================== */
+.spotlight {
+  position: absolute; top: 16vh; left: 50%; transform: translateX(-50%); z-index: 80;
+  width: 560px; max-width: 90vw;
+}
+.spotlight input {
+  width: 100%; padding: 14px 18px; border-radius: 12px; border: none; outline: none;
+  background: var(--glass-strong); backdrop-filter: blur(30px);
+  font-size: 18px; color: var(--text); box-shadow: var(--shadow);
+}
+.spotlight-results {
+  margin-top: 8px; background: var(--glass-strong); backdrop-filter: blur(30px);
+  border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; font-size: 14px;
+}
+.spotlight-results .r { display:flex; align-items:center; gap:12px; padding: 10px 16px; color: var(--text); }
+.spotlight-results .r .ri { width: 26px; text-align:center; }
+.spotlight-results .r .ri svg { width: 18px; height: 18px; }
+.spotlight-results .r.sel, .spotlight-results .r:hover { background: var(--accent); color:#fff; }
+.spotlight-results .empty { padding: 14px 16px; opacity:.6; }
+
+/* ===================== 下拉 / 右键菜单 ===================== */
+.dropdown, .context-menu {
+  position: absolute; z-index: 100; min-width: 220px;
+  background: var(--glass-strong); backdrop-filter: blur(26px) saturate(1.6);
+  -webkit-backdrop-filter: blur(26px) saturate(1.6);
+  border: 0.5px solid var(--glass-border); border-radius: 9px;
+  box-shadow: 0 14px 44px rgba(0,0,0,0.4); padding: 5px; font-size: 13px; color: var(--text);
+  animation: menuIn .12s ease;
+}
+@keyframes menuIn { from { opacity:0; transform: translateY(-4px);} to {opacity:1; transform:none;} }
+.dropdown .mi, .context-menu .mi {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  padding: 6px 12px; border-radius: 6px; cursor: default;
+}
+.dropdown .mi:hover, .context-menu .mi:hover { background: var(--accent); color: #fff; }
+.dropdown .mi .sc { opacity: .5; font-size: 12px; }
+.dropdown .sep, .context-menu .sep { height: 1px; background: var(--hair); margin: 4px 8px; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: rgba(127,127,127,.4); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(127,127,127,.6); background-clip: padding-box; }
+
+</style>
+</head>
+<body class="theme-light" data-accent="blue">
+
+<!-- ===== 开机进度 ===== -->
+<div id="boot" class="boot">
+  <div class="boot-logo">
+      <svg viewBox="0 0 384 512" width="84" height="84" aria-hidden="true">
+        <path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
+      </svg>
+  </div>
+  <div class="boot-bar"><span></span></div>
+</div>
+
+<!-- ===== 登录 / 锁屏 ===== -->
+<div id="login" class="login hidden">
+  <div class="login-avatar">
+    <svg viewBox="0 0 100 100" width="92" height="92"><circle cx="50" cy="38" r="20" fill="rgba(255,255,255,.92)"/><path d="M16 92c0-20 15-34 34-34s34 14 34 34z" fill="rgba(255,255,255,.92)"/></svg>
+  </div>
+  <div class="login-name">Linux User</div>
+  <div class="login-hint">输入任意密码，或留空直接回车</div>
+  <form id="login-form" class="login-form" autocomplete="off">
+    <input id="login-pass" type="password" class="login-input" placeholder="密码" />
+    <button type="submit" class="login-go" aria-label="登录">→</button>
+  </form>
+  <div class="login-bottom">
+    <span id="login-clock">--:--</span>
+    <span class="login-dots"><i></i><i></i><i></i></span>
+  </div>
+</div>
+
+<!-- ===== 桌面 ===== -->
+<div id="desktop" class="desktop hidden">
+
+  <!-- 顶部菜单栏 -->
+  <div id="menubar" class="menubar">
+    <div class="mb-left">
+      <button class="mb-apple" id="apple-menu" title="Apple 菜单">
+        <svg viewBox="0 0 384 512" width="15" height="15"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+      </button>
+      <span class="mb-app" id="mb-appname">Finder</span>
+      <span class="mb-item" data-menu="file">文件</span>
+      <span class="mb-item" data-menu="edit">编辑</span>
+      <span class="mb-item" data-menu="view">显示</span>
+      <span class="mb-item" data-menu="go">前往</span>
+      <span class="mb-item" data-menu="window">窗口</span>
+      <span class="mb-item" data-menu="help">帮助</span>
+    </div>
+    <div class="mb-right">
+      <span class="mb-status" id="mb-battery" title="电池">
+        <svg viewBox="0 0 32 14" width="26" height="12"><rect x="1" y="1" width="26" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="3" y="3" width="20" height="8" rx="1.5" fill="currentColor"/><rect x="28.5" y="4.5" width="2" height="5" rx="1" fill="currentColor"/></svg>
+      </span>
+      <span class="mb-status" id="mb-wifi" title="Wi-Fi">
+        <svg viewBox="0 0 20 16" width="18" height="15"><path fill="currentColor" d="M10 13.5a1.6 1.6 0 100 3.2 1.6 1.6 0 000-3.2zM10 9.4c1.7 0 3.3.7 4.5 1.9l1.5-1.5A8.2 8.2 0 0010 7.2c-2.2 0-4.3.9-5.9 2.6l1.5 1.5c1.2-1.2 2.8-1.9 4.4-1.9zM10 4.7c3 0 5.8 1.2 7.9 3.3l1.5-1.5A12.6 12.6 0 0010 2.5C6.2 2.5 2.6 4 0 7.5l1.5 1.5C3.6 6.9 6.4 4.7 9.4 4.7z" transform="translate(0 .5)"/></svg>
+      </span>
+      <span class="mb-status" id="mb-search" title="聚焦搜索">
+        <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M11 10l4 4-1 1-4-4a6 6 0 10-1-1zM6 10a4 4 0 110-8 4 4 0 010 8z"/></svg>
+      </span>
+      <span class="mb-status" id="mb-control" title="控制中心">
+        <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 2a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM3 6h10a1.5 1.5 0 000-3H3a1.5 1.5 0 000 3zm5 2a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm-5 4h10a1.5 1.5 0 000-3H3a1.5 1.5 0 000 3z"/></svg>
+      </span>
+      <span class="mb-date" id="mb-date">周X XX月XX日</span>
+      <span class="mb-clock" id="mb-clock">--:--</span>
+    </div>
+  </div>
+
+  <!-- 桌面图标 -->
+  <div class="desktop-icons" id="desktop-icons"></div>
+
+  <!-- 窗口容器 -->
+  <div id="windows" class="windows"></div>
+
+  <!-- Dock -->
+  <div id="dock-wrap" class="dock-wrap">
+    <div id="dock" class="dock"></div>
+  </div>
+
+  <!-- Launchpad -->
+  <div id="launchpad" class="launchpad hidden">
+    <div class="lp-search"><input type="text" placeholder="搜索" id="lp-search-input" /></div>
+    <div class="lp-grid" id="lp-grid"></div>
+  </div>
+
+  <!-- Spotlight / 聚焦 -->
+  <div id="spotlight" class="spotlight hidden">
+    <input type="text" id="spotlight-input" placeholder="聚焦搜索" autocomplete="off" />
+    <div class="spotlight-results" id="spotlight-results"></div>
+  </div>
+
+  <!-- Apple 菜单 -->
+  <div id="apple-dropdown" class="dropdown hidden"></div>
+
+  <!-- 右键菜单 -->
+  <div id="context-menu" class="context-menu hidden"></div>
+
+  <!-- 跟随光标的聚光灯（让光标所在位置更亮） -->
+  <div id="cursor-glow" class="cursor-glow"></div>
+</div>
+
+<script>
+/* ============================================================
+   应用定义：SVG 图标、配色、以及每个 App 的内容渲染
+   渲染函数接收 (body, ctx)：body=窗口内容容器，ctx 提供桌面 API
+   ============================================================ */
+
+const GLYPHS = {
+  finder: `<svg viewBox="0 0 24 24" width="55%" height="55%"><path fill="#fff" d="M4 6h16l-1.5-2h-13L4 6z"/><path fill="#fff" d="M4 6v11a2 2 0 002 2h12a2 2 0 002-2V6H4z"/><path fill="rgba(0,0,0,.18)" d="M6 9h12v2H6z"/></svg>`,
+  terminal: `<svg viewBox="0 0 24 24" width="55%" height="55%"><rect x="3" y="5" width="18" height="14" rx="2" fill="#fff"/><rect x="3" y="8" width="18" height="2" fill="rgba(0,0,0,.2)"/><path d="M6 11l3 2.5-3 2.5" stroke="rgba(0,0,0,.75)" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 16h5" stroke="rgba(0,0,0,.75)" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+  settings: `<svg viewBox="0 0 24 24" width="55%" height="55%"><path fill="#fff" d="M12 8a4 4 0 100 8 4 4 0 000-8zm0 6.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/><path fill="#fff" d="M18.3 13a8.5 8.5 0 000-2h2.4a9.9 9.9 0 00-1.2-3l-2.1 1.2a8.4 8.4 0 00-1.7-1.7l1.2-2.1a9.9 9.9 0 00-3-1.2V1.6h-2v2.4a10 10 0 00-3 1.2L5.4 5.2A9.9 9.9 0 004.2 8.2l-2.1-1.2A9.9 9.9 0 001 10h2.4a8.5 8.5 0 000 2H1a9.9 9.9 0 001.2 3l2.1-1.2a8.4 8.4 0 001.7 1.7l-1.2 2.1a9.9 9.9 0 003 1.2v2.4h2v-2.4a10 10 0 003-1.2l2.1 1.2a9.9 9.9 0 001.2-3l-2.1-1.2a8.4 8.4 0 001.7-1.7l2.1 1.2a9.9 9.9 0 001.2-3h-2.4z"/></svg>`,
+  calculator: `<svg viewBox="0 0 24 24" width="50%" height="50%"><rect x="4" y="4" width="16" height="16" rx="3" fill="#fff"/><rect x="6" y="6" width="12" height="4" rx="1" fill="rgba(0,0,0,.8)"/><rect x="6" y="12" width="3.5" height="3.5" rx=".6" fill="rgba(0,0,0,.55)"/><rect x="10.5" y="12" width="3.5" height="3.5" rx=".6" fill="rgba(0,0,0,.55)"/><rect x="6" y="16.5" width="3.5" height="3.5" rx=".6" fill="rgba(0,0,0,.55)"/><rect x="10.5" y="16.5" width="3.5" height="3.5" rx=".6" fill="rgba(0,0,0,.55)"/><rect x="15.5" y="12" width="2.5" height="8" rx=".6" fill="rgba(0,0,0,.7)"/></svg>`,
+  notes: `<svg viewBox="0 0 24 24" width="50%" height="50%"><rect x="5" y="4" width="14" height="16" rx="2" fill="#fff"/><path d="M8 9h8M8 12h8M8 15h5" stroke="rgba(0,0,0,.75)" stroke-width="1.3" stroke-linecap="round"/></svg>`,
+  browser: `<svg viewBox="0 0 24 24" width="55%" height="55%"><circle cx="12" cy="12" r="9" fill="#fff"/><circle cx="12" cy="12" r="8" fill="none" stroke="rgba(0,0,0,.75)" stroke-width="1.5"/><path d="M12 6v12M6 12h12" stroke="rgba(0,0,0,.75)" stroke-width="1.5" stroke-linecap="round" transform="rotate(45 12 12)"/><circle cx="12" cy="12" r="1.8" fill="rgba(0,0,0,.75)"/></svg>`,
+  about: `<svg viewBox="0 0 100 100" width="65%" height="65%"><path fill="#fff" d="M50 8c9 0 14 5 21 5 11 0 19-9 27-9 5 0 11 2 15 6-6 9-13 22-13 35 0 13 7 25 16 33-3 9-9 18-15 18-6 0-9-4-17-4s-11 4-17 4c-6 0-12-7-17-16C39 94 35 88 29 88c-12 0-23 10-30 10C-9 98-18 80-18 64 10 64 14 40 14 27 -2 24 -8 10 -8 2 -2 2 3 1 8 2 6 3 15 7 23 8z"/></svg>`,
+  music: `<svg viewBox="0 0 24 24" width="55%" height="55%"><circle cx="7" cy="18" r="4" fill="#fff"/><path d="M7 18V6l12-3v12" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`,
+  photos: `<svg viewBox="0 0 24 24" width="55%" height="55%"><rect x="3" y="5" width="18" height="14" rx="2" fill="#fff"/><circle cx="8" cy="10" r="1.6" fill="rgba(0,0,0,.25)"/><path d="M4 17l5-6 4 5 4-4 3 5z" fill="rgba(0,0,0,.18)"/></svg>`,
+  trash: `<svg viewBox="0 0 24 24" width="50%" height="50%"><path d="M6 7h12v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7z" fill="#fff"/><path d="M10 10v7M14 10v7M5 7h14" stroke="rgba(0,0,0,.75)" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  launchpad: `<svg viewBox="0 0 24 24" width="55%" height="55%"><rect x="4" y="4" width="4" height="4" rx="1" fill="#fff"/><rect x="10" y="4" width="4" height="4" rx="1" fill="#fff"/><rect x="16" y="4" width="4" height="4" rx="1" fill="#fff"/><rect x="4" y="10" width="4" height="4" rx="1" fill="#fff"/><rect x="10" y="10" width="4" height="4" rx="1" fill="#fff"/><rect x="16" y="10" width="4" height="4" rx="1" fill="#fff"/><rect x="4" y="16" width="4" height="4" rx="1" fill="#fff"/><rect x="10" y="16" width="4" height="4" rx="1" fill="#fff"/><rect x="16" y="16" width="4" height="4" rx="1" fill="#fff"/></svg>`,
+};
+
+const APPS = {
+  finder: {
+    name: "访达", color: "#2aa9ff", dock: true, title: "访达",
+    render(body, ctx) {
+      body.innerHTML = `
+        <div class="finder">
+          <div class="finder-side">
+            <h4>个人收藏</h4>
+            <div class="row active">🖥️ 桌面</div>
+            <div class="row">📁 文稿</div>
+            <div class="row">⬇️ 下载</div>
+            <div class="row">🎵 音乐</div>
+            <div class="row">🖼️ 图片</div>
+            <h4>位置</h4>
+            <div class="row">💽 根目录 /</div>
+            <div class="row">🐧 Linux 内核</div>
+          </div>
+          <div class="finder-main">
+            <div class="finder-toolbar">
+              <span>⬅️ ➡️</span><span>🔍</span>
+              <span style="margin-left:auto">6 个项目</span>
+            </div>
+            <div class="finder-grid">
+              ${[["📁","home"],["📁","etc"],["📁","usr"],["📁","var"],["⚙️","config"],["📄","readme.txt"]]
+                .map(([ic,nm]) => `<div class="fitem"><div class="ic">${ic}</div><div class="nm">${nm}</div></div>`).join("")}
+            </div>
+          </div>
+        </div>`;
+    }
+  },
+
+  terminal: {
+    name: "终端", color: "#1e1e1e", dock: true, title: "Linux — bash",
+    render(body, ctx) {
+      body.innerHTML = `<div class="term" id="term"></div>`;
+      const term = body.querySelector("#term");
+      const input = document.createElement("input");
+      const user = "linuxuser", host = "macbook-linux";
+      const promptHTML = () => `<span class="prompt">${user}@${host}</span>:<span class="path">~</span>$ `;
+      const hbrew = () => (window.__HARMONY_MODE__ || "sim");
+
+      const print = (html, cls="") => {
+        const d = document.createElement("div");
+        d.className = "line " + cls;
+        d.innerHTML = html;
+        term.appendChild(d);
+      };
+      const printRaw = (text) => { const d=document.createElement("div"); d.className="line"; d.textContent=text; term.appendChild(d); };
+
+      // 启动横幅（随 APK 模式变化）
+      if (hbrew() === "sim") {
+        print(`<span class="ascii">  _           ___  ___\n | |_ _ _ ___|   \\| __|\n |  _| '_/ -_) |) | _| \n  \\__|_| \\___|___/|___|  Linux 桌面环境</span>`);
+        print(`<span class="ok">上次登录：</span> 通过 tty1 本地登录`);
+      } else if (hbrew() === "user") {
+        print(`<span class="ok">真系统 · 用户态（PRoot）：命令由真实 arm64 Debian 执行</span>`);
+        print(`<span style="opacity:.65">输入命令即由真实 Debian 执行；uname -a 等返回真实内核信息。</span>`);
+      } else {
+        print(`<span class="ok">真系统 · 模拟器（QEMU）：正在引导真实 arm64 Linux 内核…</span>`);
+        print(`<span style="opacity:.65">稍候，真实 Debian 引导完成即可输入命令。</span>`);
+      }
+
+      const history = [];
+      let histIdx = -1;
+
+      const run = (cmd) => {
+        const m = hbrew();
+        // —— 真·用户态（PRoot）：把命令转发给 APK 桥接，由真实 arm64 Debian 执行 ——
+        if (m === "user") {
+          print(prefixHTML() + escapeHTML(cmd));
+          let out = "";
+          try {
+            out = (window.HarmonyShell && window.HarmonyShell.exec)
+              ? (window.HarmonyShell.exec(cmd) || "") : "[用户态不可用：缺少 HarmonyShell 桥接]";
+          } catch (e) { out = "shell error: " + e; }
+          out.split("\n").forEach(l => printRaw(l));
+          term.scrollTop = term.scrollHeight;
+          return;
+        }
+        // —— 真·模拟器（QEMU）：命令写入串口，回显与输出由轮询器呈现 ——
+        if (m === "emu") {
+          if (cmd.trim()) { try { window.HarmonyShell.emuWrite(cmd + "\n"); } catch (e) { printRaw("emu write error: " + e); } }
+          else { try { window.HarmonyShell.emuWrite("\n"); } catch (e) {} }
+          term.scrollTop = term.scrollHeight;
+          return;
+        }
+        // —— 仿真模式：内置假 shell ——
+        print(promptHTML() + escapeHTML(cmd));
+        const [c, ...args] = cmd.trim().split(/\s+/);
+        switch (c) {
+          case "": break;
+          case "help":
+            print(`可用命令：help, ls, pwd, whoami, uname, cat, date, echo, neofetch, clear, about`);
+            break;
+          case "ls":
+            printRaw("Desktop  Documents  Downloads  Music  Pictures  .config  readme.txt");
+            break;
+          case "pwd": printRaw("/home/linuxuser"); break;
+          case "whoami": printRaw(user); break;
+          case "date": printRaw(new Date().toString()); break;
+          case "echo": printRaw(args.join(" ")); break;
+          case "cat":
+            if (args[0] === "readme.txt") printRaw("这是一个披着 macOS 外衣的 Linux 桌面环境。内核：Linux。界面：macOS 风格。");
+            else print(`<span class="ok">cat: ${escapeHTML(args[0]||"")}: 没有那个文件</span>`);
+            break;
+          case "uname":
+            if (args.includes("-a")) printRaw("Linux macbook-linux 6.8.0-linux-desktop #1 SMP PREEMPT x86_64 GNU/Linux");
+            else printRaw("Linux");
+            break;
+          case "neofetch":
+            print(`<span class="ascii">       🐧\n   linuxuser@macbook-linux\n   ----------------------\n   OS: macOS-styled Linux\n   Kernel: 6.8.0-linux-desktop\n   Shell: bash 5.2\n   DE: macOS WebUI\n   Theme: ${document.body.classList.contains('theme-dark')?'Dark':'Light'}</span>`);
+            break;
+          case "about": print(`这是一个用 Web 技术复刻的 macOS 风格 Linux 桌面。详见「关于本机」。`); break;
+          case "clear": term.innerHTML = ""; return;
+          default: print(`<span class="ok">${escapeHTML(c)}: command not found</span>`);
+        }
+        term.scrollTop = term.scrollHeight;
+      };
+
+      // —— 模拟器串口轮询器：把真实系统的串口输出刷到终端 ——
+      const startEmu = () => {
+        if (window.__harmonyEmuOn) return;
+        window.__harmonyEmuOn = true;
+        try { if (window.HarmonyShell && window.HarmonyShell.emuStart) window.HarmonyShell.emuStart(); } catch (e) { printRaw("emu start error: " + e); }
+        window.__harmonyEmuTimer = setInterval(() => {
+          let s = "";
+          try { s = (window.HarmonyShell && window.HarmonyShell.emuRead) ? (window.HarmonyShell.emuRead() || "") : ""; } catch (e) { return; }
+          if (s) { s.split("\n").forEach(l => printRaw(l)); term.scrollTop = term.scrollHeight; }
+        }, 150);
+      };
+      const stopEmu = () => {
+        if (!window.__harmonyEmuOn) return;
+        window.__harmonyEmuOn = false;
+        clearInterval(window.__harmonyEmuTimer); window.__harmonyEmuTimer = null;
+        try { if (window.HarmonyShell && window.HarmonyShell.emuStop) window.HarmonyShell.emuStop(); } catch (e) {}
+      };
+      if (hbrew() === "emu") startEmu();
+      const modeWatcher = setInterval(() => { if (hbrew() === "emu") startEmu(); else stopEmu(); }, 400);
+
+      const line = document.createElement("div");
+      line.className = "term-input";
+      const prefixHTML = () => (hbrew() === "emu") ? "" : promptHTML();
+      line.innerHTML = prefixHTML();
+      line.appendChild(input);
+      term.appendChild(line);
+      input.focus();
+      term.addEventListener("click", () => input.focus());
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const v = input.value;
+          if (v.trim()) { history.push(v); histIdx = history.length; }
+          if (hbrew() === "emu") {
+            // 真实 shell 会回显，这里只把命令送进串口，不本地重复打印
+            if (v.trim()) { try { window.HarmonyShell.emuWrite(v + "\n"); } catch (err) { printRaw("" + err); } }
+            else { try { window.HarmonyShell.emuWrite("\n"); } catch (err) {} }
+            input.value = ""; term.scrollTop = term.scrollHeight; return;
+          }
+          run(v);
+          input.value = "";
+          term.appendChild(line); term.scrollTop = term.scrollHeight;
+        } else if (e.key === "ArrowUp") {
+          if (histIdx > 0) { histIdx--; input.value = history[histIdx]; }
+          e.preventDefault();
+        } else if (e.key === "ArrowDown") {
+          if (histIdx < history.length - 1) { histIdx++; input.value = history[histIdx]; }
+          else { histIdx = history.length; input.value = ""; }
+          e.preventDefault();
+        }
+      });
+    }
+  },
+
+  settings: {
+    name: "系统设置", color: "#8e8e93", dock: true, title: "系统设置",
+    render(body, ctx) {
+      const accents = ["blue","purple","pink","red","orange","green","graphite"];
+      const wps = [["bigsur","默认(大苏尔)"],["sonoma","Sonoma"],["ventura","Ventura"],["mono","石墨"],["graphite","深空灰"]];
+          body.innerHTML = `
+        <div class="settings">
+          <div class="settings-side">
+            <div class="srow active" data-p="general"><span class="si">🎨</span> 外观</div>
+            <div class="srow" data-p="about"><span class="si">ℹ️</span> 关于本机</div>
+            <div class="srow" data-p="linux"><span class="si">🐧</span> Linux 信息</div>
+          </div>
+          <div class="settings-main" id="set-main"></div>
+        </div>`;
+      const main = body.querySelector("#set-main");
+      const curWp = () => {
+        const m = [...document.getElementById('desktop').classList].find(c => c.startsWith('wp-'));
+        return m ? m.slice(3) : 'bigsur';
+      };
+      const draw = (p) => {
+        if (p === "general") {
+          const wpNow = curWp();
+          main.innerHTML = `
+            <h2>外观</h2>
+            <div class="field">
+              <label>主题</label>
+              <div class="seg" id="seg-theme">
+                <button data-t="light" class="${!document.body.classList.contains('theme-dark')?'on':''}">浅色</button>
+                <button data-t="dark" class="${document.body.classList.contains('theme-dark')?'on':''}">深色</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>强调色</label>
+              <div class="swatches" id="sw-accents">
+                ${accents.map(a=>`<div class="swatch sw-${a} ${document.body.dataset.accent===a?'sel':''}" data-a="${a}" style="background:${ACCENT_COLORS[a]}"></div>`).join("")}
+              </div>
+            </div>
+            <div class="field">
+              <label>墙纸</label>
+              <div class="wp-thumbs" id="wp-thumbs">
+                ${wps.map(([k,n])=>`<div class="wp-thumb wp-${k} ${k===wpNow?'sel':''}" data-w="${k}" title="${n}"></div>`).join("")}
+              </div>
+            </div>`;
+          // 主题
+          main.querySelectorAll("#seg-theme button").forEach(b=>b.onclick=()=>{
+            ctx.api.setTheme(b.dataset.t); draw("general");
+          });
+          // 强调色
+          main.querySelectorAll("#sw-accents .swatch").forEach(s=>s.onclick=()=>{
+            ctx.api.setAccent(s.dataset.a); draw("general");
+          });
+          // 墙纸
+          main.querySelectorAll("#wp-thumbs .wp-thumb").forEach(t=>t.onclick=()=>{
+            ctx.api.setWallpaper(t.dataset.w); draw("general");
+          });
+        } else if (p === "about") {
+          main.innerHTML = `
+            <h2>关于本机</h2>
+            <div class="about" style="text-align:left;padding:0">
+              <p><b>macOS-styled Linux Desktop</b></p>
+              <p style="opacity:.6;margin:6px 0 16px">版本 1.0（Web 复刻版）</p>
+              <table>
+                <tr><td>芯片</td><td>Web Engine · Chromium</td></tr>
+                <tr><td>内存</td><td>${Math.round(Math.min(16, navigator.deviceMemory||8))} GB</td></tr>
+                <tr><td>启动磁盘</td><td>虚拟磁盘 (/)</td></tr>
+                <tr><td>显示</td><td>${window.innerWidth} × ${window.innerHeight}</td></tr>
+              </table>
+            </div>`;
+        } else if (p === "linux") {
+          main.innerHTML = `
+            <h2>Linux 信息</h2>
+            <p style="opacity:.7;line-height:1.8">这是一个运行在 <b>Linux 内核</b> 之上的桌面环境，<br>前端被重做成 macOS 风格（正如你所要求的）。</p>
+            <pre style="background:rgba(127,127,127,.15);padding:14px;border-radius:10px;margin-top:14px;font-size:12.5px;line-height:1.6">$ uname -a
+Linux macbook-linux 6.8.0-linux-desktop #1 SMP PREEMPT x86_64 GNU/Linux
+
+$ cat /etc/os-release
+NAME="macOS-styled Linux"
+ID=linux-desktop
+PRETTY_NAME="Linux with macOS frontend"</pre>`;
+        }
+      };
+      body.querySelectorAll(".srow").forEach(r=>r.onclick=()=>{
+        body.querySelectorAll(".srow").forEach(x=>x.classList.remove("active"));
+        r.classList.add("active"); draw(r.dataset.p);
+      });
+      draw("general");
+    }
+  },
+
+  calculator: {
+    name: "计算器", color: "#1c1c1e", dock: true, title: "计算器",
+    render(body, ctx) {
+      body.innerHTML = `
+        <div class="calc">
+          <div class="calc-display" id="calc-disp">0</div>
+          <div class="calc-grid">
+            <button class="fn" data-k="C">AC</button>
+            <button class="fn" data-k="neg">±</button>
+            <button class="fn" data-k="%">%</button>
+            <button class="op" data-k="/">÷</button>
+            <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+            <button class="op" data-k="*">×</button>
+            <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+            <button class="op" data-k="-">−</button>
+            <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+            <button class="op" data-k="+">+</button>
+            <button class="zero" data-k="0">0</button><button data-k=".">.</button>
+            <button class="op" data-k="=">=</button>
+          </div>
+        </div>`;
+      const disp = body.querySelector("#calc-disp");
+      let cur = "0", prev = null, op = null, fresh = true;
+      const show = () => disp.textContent = cur.length>12 ? parseFloat(cur).toPrecision(8) : cur;
+      const compute = () => {
+        const a = parseFloat(prev), b = parseFloat(cur);
+        let r = b;
+        if (op==="+") r=a+b; else if(op==="-") r=a-b; else if(op==="*") r=a*b; else if(op==="/") r=b?a/b:0;
+        cur = String(+r.toFixed(10)); prev=null; op=null;
+      };
+      body.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+        const k = b.dataset.k;
+        if (/[0-9]/.test(k)) { cur = (fresh||cur==="0") ? k : cur+k; fresh=false; }
+        else if (k===".") { if(!cur.includes(".")) cur+="."; }
+        else if (k==="C") { cur="0"; prev=null; op=null; fresh=true; }
+        else if (k==="neg") { cur=String(parseFloat(cur)*-1); }
+        else if (k==="%") { cur=String(parseFloat(cur)/100); }
+        else if (k==="=") { if(op!==null){compute();} fresh=true; }
+        else { if(op!==null && !fresh){compute();} prev=cur; op=k; fresh=true; }
+        show();
+      });
+    }
+  },
+
+  notes: {
+    name: "备忘录", color: "#ffe24a", dock: true, title: "备忘录",
+    render(body, ctx) {
+      body.innerHTML = `
+        <div class="notes">
+          <div class="notes-side">
+            <div class="nrow active">📝 购物清单</div>
+            <div class="nrow">💡 灵感</div>
+            <div class="nrow">🐧 Linux 笔记</div>
+          </div>
+          <div class="notes-main"><textarea placeholder="开始输入…">牛奶、鸡蛋、咖啡豆
+macOS 风格的 Linux 桌面：
+- 菜单栏毛玻璃 ✅
+- Dock 放大 ✅
+- 光标处更亮 ✅</textarea></div>
+        </div>`;
+    }
+  },
+
+  browser: {
+    name: "浏览器", color: "#1fa2ff", dock: true, title: "浏览器",
+    render(body, ctx) {
+      body.innerHTML = `
+        <div class="browser">
+          <div class="browser-bar">
+            <span>⬅️➡️🔄</span>
+            <input value="https://linux.macos.local" />
+          </div>
+          <div class="browser-page">
+            <h1>欢迎来到 macOS 风格的 Linux</h1>
+            <p>这是一个示意页面。下方是几个可点击的「App」入口：</p>
+            <p>
+              <a href="#" data-open="terminal">打开终端</a> ·
+              <a href="#" data-open="settings">系统设置</a> ·
+              <a href="#" data-open="finder">访达</a> ·
+              <a href="#" data-open="about">关于本机</a>
+            </p>
+            <p style="opacity:.6;margin-top:18px">提示：按 <b>⌘ + 空格</b> 打开聚焦搜索，按 <b>F4</b> 或点击 Dock 最右侧打开启动台。</p>
+          </div>
+        </div>`;
+      body.querySelectorAll("[data-open]").forEach(a=>a.onclick=(e)=>{e.preventDefault(); ctx.openApp(a.dataset.open);});
+    }
+  },
+
+  about: {
+    name: "关于本机", color: "#555", dock: false, title: "关于本机",
+    render(body, ctx) {
+      body.innerHTML = `
+        <div class="about">
+          <div class="logo">🍎</div>
+          <h1>macOS-styled Linux Desktop</h1>
+          <div class="ver">版本 1.0 · Web 复刻版</div>
+          <table>
+            <tr><td>芯片</td><td>Web Engine</td></tr>
+            <tr><td>内核</td><td>Linux 6.8.0</td></tr>
+            <tr><td>内存</td><td>${Math.round(Math.min(16, navigator.deviceMemory||8))} GB</td></tr>
+            <tr><td>分辨率</td><td>${window.innerWidth} × ${window.innerHeight}</td></tr>
+            <tr><td>前端</td><td>macOS 风格（自定）</td></tr>
+          </table>
+        </div>`;
+    }
+  },
+
+  music: { name: "音乐", color: "#fb5c74", dock: false, title: "音乐",
+    render(body){ body.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text)"><div style="font-size:56px">🎵</div><h2 style="margin:12px 0">音乐</h2><p style="opacity:.6">（示例 App，可继续扩展）</p></div>`; } },
+  photos: { name: "照片", color: "#a3d14a", dock: false, title: "照片",
+    render(body){ body.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text)"><div style="font-size:56px">🌄</div><h2 style="margin:12px 0">照片</h2><p style="opacity:.6">（示例 App，可继续扩展）</p></div>`; } },
+  trash: { name: "废纸篓", color: "#8e8e93", dock: true, title: "废纸篓",
+    render(body){ body.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text)"><div style="font-size:56px">🗑️</div><p style="opacity:.6;margin-top:12px">废纸篓是空的</p></div>`; } },
+};
+
+/* 让 APPS 自动挂上对应的 SVG 图标 */
+Object.keys(APPS).forEach(id => { APPS[id].glyph = GLYPHS[id] || APPS[id].glyph || ""; });
+
+/* 桌面图标（右侧） */
+const DESKTOP_ICONS = [
+  { glyph: GLYPHS.finder, color: "linear-gradient(135deg,#2aa9ff,#1c7fd6)", label: "Macintosh HD", open: "finder" },
+  { glyph: `<svg viewBox="0 0 24 24" width="60%" height="60%"><path fill="#fff" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/></svg>`, color: "linear-gradient(135deg,#34d058,#1a7f37)", label: "Linux 内核", open: "settings" },
+  { glyph: GLYPHS.trash, color: "linear-gradient(135deg,#b0b0b5,#7c7c82)", label: "废纸篓", open: "trash" },
+];
+
+/* Dock 顺序（launchpad 为特殊启动台入口） */
+const DOCK_ORDER = ["finder","terminal","settings","calculator","notes","browser","__sep__","launchpad","about","trash"];
+
+/* 强调色色板 */
+const ACCENT_COLORS = {
+  blue:"#007AFF", purple:"#9B59FF", pink:"#FF2D92", red:"#FF3B30",
+  orange:"#FF9400", green:"#28CD41", graphite:"#8E8E93"
+};
+
+function escapeHTML(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+</script>
+<script>
+/* ============================================================
+   桌面引擎：开机/登录、菜单栏、Dock 放大、窗口管理、
+   聚光灯光标、Launchpad、聚焦搜索、右键菜单、设置联动
+   ============================================================ */
+(function () {
+  "use strict";
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const desktop = $("#desktop");
+
+  /* ---------- 跟随光标的聚光灯（让光标处更亮） ---------- */
+  const glow = $("#cursor-glow");
+  window.addEventListener("mousemove", (e) => {
+    glow.style.setProperty("--mx", e.clientX + "px");
+    glow.style.setProperty("--my", e.clientY + "px");
+  }, { passive: true });
+
+  /* ---------- 开机 → 登录 → 桌面 ---------- */
+  const boot = $("#boot");
+  const params = new URLSearchParams(location.search);
+  const skipLogin = params.has("skip") || params.has("kiosk") || ("ontouchstart" in window) || navigator.maxTouchPoints > 0;
+
+  function startBoot() {
+    requestAnimationFrame(() => boot.classList.add("done"));
+    const go = () => {
+      boot.classList.add("fade");
+      setTimeout(() => {
+        boot.classList.add("hidden");
+        if (skipLogin) enterDesktop();
+        else showLogin();
+      }, 600);
+    };
+    if (skipLogin) { setTimeout(go, 200); }
+    else setTimeout(go, 2400);
+  }
+
+  function showLogin() {
+    const login = $("#login");
+    login.classList.remove("hidden");
+    tickClock($("#login-clock"), true);
+    $("#login-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      login.classList.add("fade");
+      setTimeout(() => { login.classList.add("hidden"); enterDesktop(); }, 500);
+    });
+    $("#login-pass").focus();
+  }
+
+  function enterDesktop() {
+    desktop.classList.remove("hidden");
+    buildDesktopIcons();
+    buildDock();
+    buildLaunchpad();
+    bindMenubar();
+    bindContextMenu();
+    bindGlobalKeys();
+    tickClock();
+    setInterval(tickClock, 1000 * 30);
+    // 默认打开「访达」和「终端」各一个，营造桌面已启动的感觉
+    openApp("finder");
+    setTimeout(() => openApp("notes"), 250);
+  }
+
+  /* ---------- 时钟 / 日期 ---------- */
+  function tickClock(el, force) {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const t = `${hh}:${mm}`;
+    const wd = ["周日","周一","周二","周三","周四","周五","周六"][now.getDay()];
+    const d = `${wd} ${now.getMonth() + 1}月${now.getDate()}日`;
+    if (el) el.textContent = t;
+    const c = $("#mb-clock"); if (c) c.textContent = t;
+    const dt = $("#mb-date"); if (dt) dt.textContent = d;
+  }
+
+  /* ---------- 桌面图标 ---------- */
+  function buildDesktopIcons() {
+    const wrap = $("#desktop-icons");
+    wrap.innerHTML = DESKTOP_ICONS.map((it, i) =>
+      `<div class="dicon" data-open="${it.open}">
+         <div class="glyph" style="background:${it.color}">${it.glyph}</div>
+         <div class="label">${it.label}</div>
+       </div>`).join("");
+    const open = (el) => openApp(el.dataset.open);
+    wrap.querySelectorAll(".dicon").forEach(el => {
+      el.addEventListener("click", open);
+      el.addEventListener("dblclick", open);
+    });
+  }
+
+  /* ---------- Dock ---------- */
+  function buildDock() {
+    const dock = $("#dock");
+    dock.innerHTML = "";
+    DOCK_ORDER.forEach((id) => {
+      if (id === "__sep__") { const s = document.createElement("div"); s.className = "dock-sep"; dock.appendChild(s); return; }
+      if (id === "launchpad") {
+        const a = makeDockApp(GLYPHS.launchpad, "linear-gradient(135deg,#6a5cff,#16c2c2)", "启动台");
+        a.onclick = toggleLaunchpad;
+        dock.appendChild(a); return;
+      }
+      const app = APPS[id];
+      const a = makeDockApp(app.glyph, app.color, app.name);
+      a.dataset.appid = id;
+      a.onclick = () => openApp(id);
+      dock.appendChild(a);
+    });
+    // 放大效果
+    const apps = [...dock.querySelectorAll(".dock-app")];
+    const dockWrap = $("#dock-wrap");
+    dockWrap.addEventListener("mousemove", (e) => {
+      const rect = dockWrap.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      apps.forEach((a) => {
+        const r = a.getBoundingClientRect();
+        const ax = r.left + r.width / 2 - rect.left;
+        const dist = Math.abs(mx - ax);
+        const scale = Math.max(1, 1 + 0.6 * Math.exp(-(dist * dist) / (2 * 26 * 26)));
+        a.style.setProperty("--scale", scale.toFixed(3));
+      });
+    });
+    dockWrap.addEventListener("mouseleave", () =>
+      apps.forEach((a) => a.style.setProperty("--scale", "1")));
+  }
+  function makeDockApp(icon, color, title) {
+    const a = document.createElement("div");
+    a.className = "dock-app";
+    a.title = title;
+    a.style.background = color;
+    a.innerHTML = `${icon}<span class="dot"></span>`;
+    return a;
+  }
+  function markRunning(id, on) {
+    const el = $(`.dock-app[data-appid="${id}"]`);
+    if (el) el.querySelector(".dot").style.opacity = on ? "1" : "0";
+  }
+
+  /* ---------- Launchpad ---------- */
+  function buildLaunchpad() {
+    const grid = $("#lp-grid");
+    const all = Object.entries(APPS);
+    grid.innerHTML = all.map(([id, a]) =>
+      `<div class="lp-app" data-open="${id}">
+         <div class="ic" style="background:${a.color}">${a.glyph}</div>
+         <div class="nm">${a.name}</div>
+       </div>`).join("");
+    grid.querySelectorAll(".lp-app").forEach(el =>
+      el.onclick = () => { toggleLaunchpad(false); openApp(el.dataset.open); });
+    $("#lp-search-input").addEventListener("input", (e) => {
+      const q = e.target.value.toLowerCase();
+      grid.querySelectorAll(".lp-app").forEach(el => {
+        const nm = el.querySelector(".nm").textContent.toLowerCase();
+        el.style.display = (!q || nm.includes(q)) ? "" : "none";
+      });
+    });
+  }
+  function toggleLaunchpad(force) {
+    const lp = $("#launchpad");
+    const show = force === undefined ? lp.classList.contains("hidden") : force;
+    lp.classList.toggle("hidden", !show);
+    if (show) $("#lp-search-input").value = "", $("#lp-search-input").focus();
+  }
+
+  /* ---------- 窗口管理 ---------- */
+  const windowsBox = $("#windows");
+  let zTop = 100;
+  const openWins = {}; // appId -> winEl
+
+  function openApp(id) {
+    const app = APPS[id];
+    if (!app) return;
+    if (openWins[id] && !openWins[id].dataset.minimized) { focusWin(openWins[id]); return; }
+    if (openWins[id] && openWins[id].dataset.minimized) { restoreWin(openWins[id]); return; }
+
+    const win = document.createElement("div");
+    win.className = "win focus-anim";
+    win.dataset.appid = id;
+    const offset = (Object.keys(openWins).length % 6) * 26;
+    const w = Math.min(app.dock ? 760 : 440, Math.max(300, window.innerWidth - 24));
+    const h = Math.min(app.dock ? 480 : 400, Math.max(220, window.innerHeight - 110));
+    win.style.width = w + "px";
+    win.style.height = h + "px";
+    win.style.left = Math.max(8, Math.round((window.innerWidth - w) / 2 + (offset - 65))) + "px";
+    win.style.top = Math.max(32, 80 + offset) + "px";
+    win.style.zIndex = ++zTop;
+
+    win.innerHTML = `
+      <div class="titlebar">
+        <div class="traffic">
+          <span class="light close" title="关闭"><svg viewBox="0 0 8 8"><path d="M1.5 1.5l5 5M6.5 1.5l-5 5" stroke-width="1.3" fill="none" stroke-linecap="round"/></span>
+          <span class="light min" title="最小化"><svg viewBox="0 0 8 8"><path d="M2 4h4" stroke-width="1.3" fill="none" stroke-linecap="round"/></span>
+          <span class="light max" title="缩放"><svg viewBox="0 0 8 8"><path d="M2 2h4v4H2z" stroke-width="1.3" fill="none"/></span>
+        </div>
+        <div class="win-title">${app.title || app.name}</div>
+      </div>
+      <div class="win-body"></div>
+      <div class="win-resize"></div>`;
+
+    windowsBox.appendChild(win);
+    openWins[id] = win;
+    markRunning(id, true);
+
+    // 内容渲染
+    const body = win.querySelector(".win-body");
+    try { app.render(body, { openApp, close: () => closeWin(win), api: DesktopAPI }); }
+    catch (err) { body.innerHTML = `<div style="padding:20px;color:red">渲染出错：${escapeHTML(err.message)}</div>`; }
+
+    // 交互绑定
+    bindWin(win);
+    focusWin(win);
+    win.addEventListener("animationend", () => win.classList.remove("focus-anim"), { once: true });
+  }
+
+  function focusWin(win) {
+    Object.values(openWins).forEach((w) => w.classList.add("inactive"));
+    win.classList.remove("inactive");
+    win.style.zIndex = ++zTop;
+    const id = win.dataset.appid;
+    const app = APPS[id];
+    if (app) { $("#mb-appname").textContent = app.name; }
+  }
+
+  function closeWin(win) {
+    win.classList.add("closing");
+    setTimeout(() => {
+      win.remove();
+      const id = win.dataset.appid;
+      delete openWins[id];
+      markRunning(id, false);
+    }, 180);
+  }
+  function minimizeWin(win) {
+    win.dataset.minimized = "1";
+    win.classList.add("minimizing");
+    setTimeout(() => { win.classList.add("hidden"); win.classList.remove("minimizing"); }, 220);
+  }
+  function restoreWin(win) {
+    win.classList.remove("hidden");
+    delete win.dataset.minimized;
+    focusWin(win);
+  }
+  function toggleMax(win) {
+    if (win.dataset.maxed) {
+      const r = JSON.parse(win.dataset.maxed);
+      Object.assign(win.style, r);
+      delete win.dataset.maxed;
+    } else {
+      win.dataset.maxed = JSON.stringify({
+        left: win.style.left, top: win.style.top, width: win.style.width, height: win.style.height
+      });
+      win.style.left = "0px"; win.style.top = "26px";
+      win.style.width = "100vw"; win.style.height = "calc(100vh - 26px - 80px)";
+      focusWin(win);
+    }
+  }
+
+  function bindWin(win) {
+    const resize = win.querySelector(".win-resize");
+    win.addEventListener("pointerdown", () => focusWin(win));
+    // 缩放（Pointer Events：鼠标 + 触屏通用）
+    resize.addEventListener("pointerdown", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      try { resize.setPointerCapture(e.pointerId); } catch (_) {}
+      const sw = win.offsetWidth, sh = win.offsetHeight;
+      const sx = e.clientX, sy = e.clientY;
+      const move = (ev) => {
+        win.style.width = Math.max(280, Math.min(window.innerWidth - 20, sw + ev.clientX - sx)) + "px";
+        win.style.height = Math.max(200, Math.min(window.innerHeight - 40, sh + ev.clientY - sy)) + "px";
+      };
+      const up = () => { resize.removeEventListener("pointermove", move); resize.removeEventListener("pointerup", up); };
+      resize.addEventListener("pointermove", move);
+      resize.addEventListener("pointerup", up);
+    });
+    // 交通灯
+    win.querySelector(".light.close").onclick = (e) => { e.stopPropagation(); closeWin(win); };
+    win.querySelector(".light.min").onclick = (e) => { e.stopPropagation(); minimizeWin(win); };
+    win.querySelector(".light.max").onclick = (e) => { e.stopPropagation(); toggleMax(win); };
+  }
+
+  // 标题栏拖动（Pointer Events：鼠标 + 触屏通用，避免拖太快丢失）
+  windowsBox.addEventListener("pointerdown", (e) => {
+    const bar = e.target.closest(".titlebar");
+    if (!bar || e.target.closest(".light")) return;
+    e.preventDefault();
+    const win = bar.closest(".win");
+    try { win.setPointerCapture(e.pointerId); } catch (_) {}
+    const startX = e.clientX, startY = e.clientY;
+    const l = parseFloat(win.style.left), t = parseFloat(win.style.top);
+    const move = (ev) => {
+      win.style.left = Math.max(-win.offsetWidth + 80, Math.min(window.innerWidth - 80, l + ev.clientX - startX)) + "px";
+      win.style.top = Math.max(26, Math.min(window.innerHeight - 40, t + ev.clientY - startY)) + "px";
+    };
+    const up = () => { win.removeEventListener("pointermove", move); win.removeEventListener("pointerup", up); };
+    win.addEventListener("pointermove", move);
+    win.addEventListener("pointerup", up);
+  });
+
+  /* ---------- 菜单栏 ---------- */
+  function bindMenubar() {
+    $("#apple-menu").onclick = (e) => {
+      e.stopPropagation();
+      const dd = $("#apple-dropdown");
+      dd.innerHTML = `
+        <div class="mi" data-a="about">关于本机 <span class="sc"></span></div>
+        <div class="sep"></div>
+        <div class="mi" data-a="settings">系统设置…</div>
+        <div class="mi" data-a="lock">锁定屏幕</div>
+        <div class="mi" data-a="restart">重新启动…</div>
+        <div class="mi" data-a="shutdown">关机…</div>`;
+      positionDropdown(dd, e.currentTarget, "mb-left");
+      dd.querySelectorAll(".mi").forEach(m => m.onclick = () => {
+        hideDropdown();
+        const a = m.dataset.a;
+        if (a === "about") openApp("about");
+        else if (a === "settings") openApp("settings");
+        else if (a === "lock") { desktop.classList.add("hidden"); showLogin(); }
+        else if (a === "restart") location.reload();
+        else if (a === "shutdown") { desktop.classList.add("hidden"); boot.classList.remove("hidden","fade"); $("#boot").style.background="#000"; }
+      });
+    };
+    // 应用菜单（点击显示占位菜单）
+    document.querySelectorAll(".mb-item").forEach(it => it.onclick = (e) => {
+      e.stopPropagation();
+      const dd = $("#apple-dropdown");
+      const map = {
+        file: [["新建窗口","⌘N"],["打开…","⌘O"],["sep"],["关闭窗口","⌘W"]],
+        edit: [["撤销","⌘Z"],["重做","⇧⌘Z"],["sep"],["剪切","⌘X"],["拷贝","⌘C"],["粘贴","⌘V"]],
+        view: [["进入全屏幕","⌃⌘F"],["显示标签页栏"]],
+        go: [["前往文件夹…","⇧⌘G"],["个人收藏"]],
+        window: [["最小化","⌘M"],["缩放"],["sep"],["全部置于顶层"]],
+        help: [["macOS 风格 Linux 帮助"]]
+      };
+      const items = map[it.dataset.menu] || [];
+      dd.innerHTML = items.map(x => x[0]==="sep" ? `<div class="sep"></div>`
+        : `<div class="mi">${x[0]}<span class="sc">${x[1]||""}</span></div>`).join("");
+      positionDropdown(dd, e.currentTarget, "mb-left");
+    });
+    document.addEventListener("click", hideDropdown);
+  }
+  function positionDropdown(dd, anchor, side) {
+    dd.classList.remove("hidden");
+    const r = anchor.getBoundingClientRect();
+    dd.style.top = (r.bottom + 4) + "px";
+    dd.style.left = Math.max(8, r.left) + "px";
+  }
+  function hideDropdown() { $("#apple-dropdown").classList.add("hidden"); }
+
+  /* ---------- 右键菜单 ---------- */
+  function bindContextMenu() {
+    desktop.addEventListener("contextmenu", (e) => {
+      if (e.target.closest(".win") || e.target.closest(".dock-wrap")) return;
+      e.preventDefault();
+      const cm = $("#context-menu");
+      cm.innerHTML = `
+        <div class="mi" data-a="wallpaper">更改桌面背景…</div>
+        <div class="mi" data-a="term">打开终端</div>
+        <div class="sep"></div>
+        <div class="mi" data-a="about">关于本机</div>
+        <div class="mi" data-a="lp">打开启动台</div>`;
+      cm.classList.remove("hidden");
+      cm.style.top = e.clientY + "px";
+      cm.style.left = e.clientX + "px";
+      cm.querySelectorAll(".mi").forEach(m => m.onclick = () => {
+        cm.classList.add("hidden");
+        const a = m.dataset.a;
+        if (a === "wallpaper") openApp("settings");
+        else if (a === "term") openApp("terminal");
+        else if (a === "about") openApp("about");
+        else if (a === "lp") toggleLaunchpad(true);
+      });
+    });
+    document.addEventListener("click", () => $("#context-menu").classList.add("hidden"));
+  }
+
+  /* ---------- 全局快捷键 ---------- */
+  function bindGlobalKeys() {
+    document.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.code === "Space") {
+        e.preventDefault();
+        const sp = $("#spotlight");
+        const show = sp.classList.contains("hidden");
+        sp.classList.toggle("hidden", !show);
+        if (show) { const i = $("#spotlight-input"); i.value = ""; i.focus(); renderSpotlight(""); }
+        return;
+      }
+      if (e.key === "Escape") {
+        $("#spotlight").classList.add("hidden");
+        toggleLaunchpad(false);
+      }
+      if (e.key === "F4") { e.preventDefault(); toggleLaunchpad(); }
+    });
+    // 聚焦搜索
+    const si = $("#spotlight-input");
+    si.addEventListener("input", () => renderSpotlight(si.value));
+    si.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const first = $("#spotlight-results .r");
+        if (first) { first.click(); }
+      }
+    });
+  }
+  function renderSpotlight(q) {
+    const res = $("#spotlight-results");
+    q = (q || "").toLowerCase().trim();
+    const list = Object.entries(APPS).filter(([id, a]) => !q || a.name.toLowerCase().includes(q) || id.includes(q));
+    if (!list.length) { res.innerHTML = `<div class="empty">没有找到 “${escapeHTML(q)}”</div>`; return; }
+    res.innerHTML = list.map(([id, a]) =>
+      `<div class="r" data-open="${id}"><span class="ri" style="background:${a.color};border-radius:6px;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center">${a.glyph}</span><span>${a.name}</span></div>`).join("");
+    res.querySelectorAll(".r").forEach(r => r.onclick = () => {
+      $("#spotlight").classList.add("hidden");
+      openApp(r.dataset.open);
+    });
+  }
+
+  /* ---------- 对外 API（供 App 调用） ---------- */
+  window.DesktopAPI = {
+    setTheme(t) {
+      document.body.classList.toggle("theme-dark", t === "dark");
+      const seg = $("#seg-theme"); // 若在设置页内则刷新
+    },
+    setAccent(a) { document.body.dataset.accent = a; },
+    setWallpaper(k) {
+      desktop.className = desktop.className.replace(/\bwp-\w+\b/g, "").trim();
+      if (k && k !== "bigsur") desktop.classList.add("wp-" + k);
+    },
+    openApp
+  };
+
+  /* ---------- 启动 ---------- */
+  startBoot();
+})();
+
+</script>
+</body>
+</html>
