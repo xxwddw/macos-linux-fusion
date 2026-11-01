@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>macOS · Linux Desktop</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="theme-light" data-accent="blue">
+
+<!-- ===== 开机进度 ===== -->
+<div id="boot" class="boot">
+  <div class="boot-logo">
+      <svg viewBox="0 0 384 512" width="84" height="84" aria-hidden="true">
+        <path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
+      </svg>
+  </div>
+  <div class="boot-bar"><span></span></div>
+</div>
+
+<!-- ===== 登录 / 锁屏 ===== -->
+<div id="login" class="login hidden">
+  <div class="login-avatar">
+    <svg viewBox="0 0 100 100" width="92" height="92"><circle cx="50" cy="38" r="20" fill="rgba(255,255,255,.92)"/><path d="M16 92c0-20 15-34 34-34s34 14 34 34z" fill="rgba(255,255,255,.92)"/></svg>
+  </div>
+  <div class="login-name">Linux User</div>
+  <div class="login-hint">输入任意密码，或留空直接回车</div>
+  <form id="login-form" class="login-form" autocomplete="off">
+    <input id="login-pass" type="password" class="login-input" placeholder="密码" />
+    <button type="submit" class="login-go" aria-label="登录">→</button>
+  </form>
+  <div class="login-bottom">
+    <span id="login-clock">--:--</span>
+    <span class="login-dots"><i></i><i></i><i></i></span>
+  </div>
+</div>
+
+<!-- ===== 桌面 ===== -->
+<div id="desktop" class="desktop hidden">
+
+  <!-- 顶部菜单栏 -->
+  <div id="menubar" class="menubar">
+    <div class="mb-left">
+      <button class="mb-apple" id="apple-menu" title="Apple 菜单">
+        <svg viewBox="0 0 384 512" width="15" height="15"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+      </button>
+      <span class="mb-app" id="mb-appname">Finder</span>
+      <span class="mb-item" data-menu="file">文件</span>
+      <span class="mb-item" data-menu="edit">编辑</span>
+      <span class="mb-item" data-menu="view">显示</span>
+      <span class="mb-item" data-menu="go">前往</span>
+      <span class="mb-item" data-menu="window">窗口</span>
+      <span class="mb-item" data-menu="help">帮助</span>
+    </div>
+    <div class="mb-right">
+      <span class="mb-status" id="mb-battery" title="电池">
+        <svg viewBox="0 0 32 14" width="26" height="12"><rect x="1" y="1" width="26" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="3" y="3" width="20" height="8" rx="1.5" fill="currentColor"/><rect x="28.5" y="4.5" width="2" height="5" rx="1" fill="currentColor"/></svg>
+      </span>
+      <span class="mb-status" id="mb-wifi" title="Wi-Fi">
+        <svg viewBox="0 0 20 16" width="18" height="15"><path fill="currentColor" d="M10 13.5a1.6 1.6 0 100 3.2 1.6 1.6 0 000-3.2zM10 9.4c1.7 0 3.3.7 4.5 1.9l1.5-1.5A8.2 8.2 0 0010 7.2c-2.2 0-4.3.9-5.9 2.6l1.5 1.5c1.2-1.2 2.8-1.9 4.4-1.9zM10 4.7c3 0 5.8 1.2 7.9 3.3l1.5-1.5A12.6 12.6 0 0010 2.5C6.2 2.5 2.6 4 0 7.5l1.5 1.5C3.6 6.9 6.4 4.7 9.4 4.7z" transform="translate(0 .5)"/></svg>
+      </span>
+      <span class="mb-status" id="mb-search" title="聚焦搜索">
+        <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M11 10l4 4-1 1-4-4a6 6 0 10-1-1zM6 10a4 4 0 110-8 4 4 0 010 8z"/></svg>
+      </span>
+      <span class="mb-status" id="mb-control" title="控制中心">
+        <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 2a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM3 6h10a1.5 1.5 0 000-3H3a1.5 1.5 0 000 3zm5 2a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm-5 4h10a1.5 1.5 0 000-3H3a1.5 1.5 0 000 3z"/></svg>
+      </span>
+      <span class="mb-date" id="mb-date">周X XX月XX日</span>
+      <span class="mb-clock" id="mb-clock">--:--</span>
+    </div>
+  </div>
+
+  <!-- 桌面图标 -->
+  <div class="desktop-icons" id="desktop-icons"></div>
+
+  <!-- 窗口容器 -->
+  <div id="windows" class="windows"></div>
+
+  <!-- Dock -->
+  <div id="dock-wrap" class="dock-wrap">
+    <div id="dock" class="dock"></div>
+  </div>
+
+  <!-- Launchpad -->
+  <div id="launchpad" class="launchpad hidden">
+    <div class="lp-search"><input type="text" placeholder="搜索" id="lp-search-input" /></div>
+    <div class="lp-grid" id="lp-grid"></div>
+  </div>
+
+  <!-- Spotlight / 聚焦 -->
+  <div id="spotlight" class="spotlight hidden">
+    <input type="text" id="spotlight-input" placeholder="聚焦搜索" autocomplete="off" />
+    <div class="spotlight-results" id="spotlight-results"></div>
+  </div>
+
+  <!-- Apple 菜单 -->
+  <div id="apple-dropdown" class="dropdown hidden"></div>
+
+  <!-- 右键菜单 -->
+  <div id="context-menu" class="context-menu hidden"></div>
+
+  <!-- 跟随光标的聚光灯（让光标所在位置更亮） -->
+  <div id="cursor-glow" class="cursor-glow"></div>
+</div>
+
+<script src="apps.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
